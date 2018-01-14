@@ -1,0 +1,43 @@
+{{ define "githubCallback" }}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+        var GITHUB_KEY = "com.stemcstudio.github";
+
+        var codeMatch = window.location.href.match(/^.*?code=([a-z0-9]*)/);
+        var uuidMatch = window.location.href.match(/^.*?state=([a-z0-9\-]*)/);
+
+        if (codeMatch) {
+            var code = codeMatch[1];
+
+            var github = JSON.parse(window.localStorage.getItem(GITHUB_KEY));
+
+            github.oauth.code = codeMatch[1];
+
+            if (uuidMatch) {
+                github.oauth.state = uuidMatch[1];
+            }
+            else {
+                github.oauth.state = undefined;
+            }
+
+            window.localStorage.setItem(GITHUB_KEY, JSON.stringify(github));
+
+            window.location.href = "/";
+        }
+        else {
+            alert("Problem authenticating: ");
+            console.log(window.location.href);
+        }
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>
+
+{{ end }}

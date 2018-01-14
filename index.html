@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <base href='/'>
+    <meta charset="utf-8">
+    <title>STEMCstudio</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="fragment" content="!">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="author" edit="David Geo Holmes">
+    <meta name="copyright" content="David Geo Holmes 2015-2017">
+    <meta name="keywords" content="STEMCstudio, STEM, STEM+C, Computing, Partneships, NSF, education, computation, learning, modeling, inquiry, TypeScript, JavaScript, programming, free, online, physics, math, geometry, geometric, algebra, units, vectors, functions, webgl, React, Redux, Pyret, Python, Bootstrap">
+    <meta name="description" content="Live Collaborative TypeScript Coding in a Gist">
+    <meta name="google-signin-client_id" content="54406425322-nv10ri5f0p6vl3i2nrkbhv8mv9pmb4r1.apps.googleusercontent.com">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600">
+    <link rel="stylesheet" href="/css/app.css?version=2.39.33" media="all">
+    <!-- Google Analytics -->
+    <script>
+        // Instructs analytics.js to use the name `ga`.
+        // This must match the namespace in the AngularJS service.
+        window.GoogleAnalyticsObject = 'ga';
+
+        // Creates an initial ga() function.
+        // The queued commands will be executed once analytics.js loads.
+        window.ga = window.ga || function () {
+            (ga.q = ga.q || []).push(arguments)
+        };
+
+        // Sets the time (as an integer) this tag was executed.
+        // Used for timing hits.
+        ga.l = +new Date;
+
+        // Creates a tracker with automatic cookie domain configuration.
+        ga('create', 'UA-41504069-5', 'auto');
+
+        // Sends a pageview hit from the tracker just created.
+        ga('send', 'pageview');
+    </script>
+    <!-- Set the `async` attribute to load the script asynchronously -->
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
+    <!-- End Google Analytics -->
+    <!-- Google Sign-In -->
+    <script async defer src="https://apis.google.com/js/platform.js"></script>
+    <!-- End Google Sign-In -->
+    <!-- AWS SDK for JavaScript -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.3.13.min.js"></script>
+    <!-- End AWS SDK for JavaScript -->
+</head>
+
+<body ng-controller="body-controller">
+    <script src="jspm_packages/npm/reflect-metadata@0.1.10/Reflect.js"></script>
+    <script src="jspm_packages/system.js?version=2.39.33"></script>
+    <script src="jspm.config.js?version=2.39.33"></script>
+    <script>
+        // Used by prerender.io to determine when page is ready to be cached.
+        window.prerenderReady = false;
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker
+                .register('/sw.js')
+                .then(function () {
+                    /* console.log("service worker registered."); */
+                });
+        }
+    </script>
+    <script>
+        var systemLocate = System.locate;
+        System.locate = function (load) {
+            var System = this;
+            return Promise.resolve(systemLocate.call(this, load)).then(function (address) {
+                return address + System.cacheBust;
+            });
+        };
+        System.cacheBust = '?version=2.39.33';
+        System.defaultJSExtensions = true
+        System.import('js/main')
+    </script>
+    <div ui-view>
+        <div style='background-color: rgb(30, 30, 30); height: 100%; width: 100%; padding-top: 60px'>
+            <center>
+                <svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                        <rect fill="#999" height="256" width="512" y="0" x="0" />
+                        <rect fill="#ff9900" height="256" width="512" y="256" x="0" />
+                        <rect fill="#fff" height="256" width="128" y="128" x="256" />
+                        <rect fill="#555" height="256" width="128" y="128" x="128" />
+                        <text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="30" y="256" x="138"
+                            stroke-width="0" stroke="#999" fill="#999">STEM</text>
+                        <text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="30" y="256" x="225"
+                            stroke-width="0" stroke="#fff" fill="#fff">C</text>
+                        <text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" y="256" x="260"
+                            stroke-width="0" stroke="#ff9900" fill="#ff9900">studio</text>
+                        <text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" y="256" x="326"
+                            stroke-width="0" stroke="#555" fill="#555">.com</text>
+                    </g>
+                </svg>
+            </center>
+        </div>
+    </div>
+</body>
+
+</html>
