@@ -16,6 +16,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 
 	"github.com/gorilla/mux"
 )
@@ -158,23 +159,45 @@ func makeSearch(sess *session.Session) http.HandlerFunc {
 /**
  * Handle POST "/submissions" with body {author, credentials, gistId, keywords, owner, title}
  */
-func submissions(w http.ResponseWriter, r *http.Request) {
-	var payload submissionPayload
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&payload)
-	if err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-	// The search string is now in payload.Query.
-	fmt.Println("POST /submissions")
-	fmt.Println("Author  : ", payload.Author)
-	fmt.Println("GistID  : ", payload.GistID)
-	fmt.Println("Keywords: ", payload.Keywords)
-	fmt.Println("Owner   : ", payload.Owner)
-	fmt.Println("Title   : ", payload.Title)
+func makeSubmit(sess *session.Session) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var payload submissionPayload
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&payload)
+		if err != nil {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
 
-	http.Error(w, "Bad request", http.StatusBadRequest)
+		db := dynamodb.New(sess)
+		params := &dynamodb.PutItemInput{TableName: aws.String("DoodleRef"), Item: map[string]*dynamodb.AttributeValue{
+			"OwnerKey": {
+				S: aws.String(payload.Owner),
+			},
+			"ResourceKey": {
+				S: aws.String(payload.GistID),
+			},
+			"Type": {
+				S: aws.String("Gist"),
+			},
+			"Title": {
+				S: aws.String(payload.Title),
+			},
+			"Author": {
+				S: aws.String(payload.Author),
+			},
+			"Keywords": {
+				SS: aws.StringSlice(payload.Keywords),
+			},
+		}}
+		_, err = db.PutItem(params)
+		if err != nil {
+			fmt.Println("err  : ", err)
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+		http.Error(w, "OK", http.StatusOK)
+	}
 }
 
 func main() {
@@ -202,7 +225,7 @@ func main() {
 	router.HandleFunc("/authenticate/{code}", makeExchange(githubAccessKey, githubSecretKey))
 
 	router.HandleFunc("/search", makeSearch(sess))
-	router.HandleFunc("/submissions", submissions)
+	router.HandleFunc("/submissions", makeSubmit(sess))
 
 	router.PathPrefix("/").Handler(withCookies(http.FileServer(http.Dir("./generated")), githubAccessKey))
 
