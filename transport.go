@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/geometryzen/stemcstudio-search-sdk-go"
+	"github.com/geometryzen/stemcstudio-arXiv-sdk-go"
 )
 
 func makeSearchHandlerFunc(service arXiv.Service) http.HandlerFunc {
@@ -29,6 +29,7 @@ func makeSearchHandlerFunc(service arXiv.Service) http.HandlerFunc {
 }
 
 func makeSubmitHandlerFunc(service arXiv.Service) http.HandlerFunc {
+	// Maybe there is a more efficient way to be a gateway?
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload arXiv.Submission
 		decoder := json.NewDecoder(r.Body)
@@ -37,8 +38,7 @@ func makeSubmitHandlerFunc(service arXiv.Service) http.HandlerFunc {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
-		packet := arXiv.Submission{Author: payload.Author, GistID: payload.GistID, Keywords: payload.Keywords, Owner: payload.Owner, Title: payload.Title}
-		_, err = service.Submit(&packet)
+		_, err = service.Submit(&payload)
 		if err != nil {
 			fmt.Println("err  : ", err)
 			http.Error(w, "Bad request", http.StatusBadRequest)

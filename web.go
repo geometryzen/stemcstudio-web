@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/geometryzen/stemcstudio-search-sdk-go"
+	"github.com/geometryzen/stemcstudio-arXiv-sdk-go"
 
 	"github.com/gorilla/mux"
 )
@@ -88,10 +88,6 @@ func main() {
 	githubSecretKey := os.Getenv("GITHUB_APPLICATION_CLIENT_SECRET")
 	fmt.Printf("GITHUB_APPLICATION_CLIENT_ID => %s\n", githubAccessKey)
 	fmt.Printf("len(GITHUB_APPLICATION_CLIENT_SECRET) => %d\n", len(githubSecretKey))
-
-	// The following lines
-	fmt.Printf("AWS_ACCESS_KEY_ID => %s\n", os.Getenv("AWS_ACCESS_KEY_ID"))
-	fmt.Printf("len(AWS_SECRET_ACCESS_KEY) => %d\n", len(os.Getenv("AWS_SECRET_ACCESS_KEY")))
 
 	searchService := arXiv.NewClient(nil)
 	u, err := url.Parse("http://localhost:8081")
