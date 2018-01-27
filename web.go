@@ -9,14 +9,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/geometryzen/stemcstudio-search-sdk-go"
 
 	"github.com/gorilla/mux"
 )
@@ -54,33 +51,6 @@ type wrapToken struct {
 	Token string `json:"token"`
 }
 
-type searchRequest struct {
-	Query string `json:"query"`
-}
-
-type searchRef struct {
-	HRef     string   `json:"href"`
-	Owner    string   `json:"owner"`
-	GistID   string   `json:"gistId"`
-	Title    string   `json:"title"`
-	Author   string   `json:"author"`
-	Keywords []string `json:"keywords"`
-}
-
-type searchResponse struct {
-	Found int64       `json:"found"`
-	Start int64       `json:"start"`
-	Refs  []searchRef `json:"refs"`
-}
-
-type submissionPayload struct {
-	Author   string   `json:"author"`
-	GistID   string   `json:"gistId"`
-	Keywords []string `json:"keywords"`
-	Owner    string   `json:"owner"`
-	Title    string   `json:"title"`
-}
-
 /**
  * Handler function allowing the front-end application to exchange a temporary authorization code for a token.
  * The request comes through the server to avoid exposing the GitHub secret key.
@@ -108,98 +78,6 @@ func makeExchange(clientID string, clientSecret string) http.HandlerFunc {
 	}
 }
 
-func mapToString(fields map[string][]*string, name string) string {
-	xs := fields[name]
-	if len(xs) > 0 {
-		return aws.StringValue(xs[0])
-	}
-	return ""
-}
-
-func mapToStrings(fields map[string][]*string, name string) []string {
-	return aws.StringValueSlice(fields[name])
-}
-
-/**
- * Handle POST "/search" with body {query: "..."}
- */
-func makeSearch(sess *session.Session) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var payload searchRequest
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&payload)
-		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
-
-		csd := cloudsearchdomain.New(sess, &aws.Config{Endpoint: aws.String("search-doodle-ref-xieragrgc2gcnrcog3r6bme75u.us-east-1.cloudsearch.amazonaws.com")})
-
-		size := int64(30)
-		data, err := csd.Search(&cloudsearchdomain.SearchInput{Query: aws.String(payload.Query), Size: &size})
-		if err != nil {
-			fmt.Println("err  : ", err)
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
-		response := searchResponse{Found: *data.Hits.Found, Start: *data.Hits.Start}
-		for _, record := range data.Hits.Hit {
-			href := *record.Id
-			owner := mapToString(record.Fields, "ownerkey")
-			gistID := mapToString(record.Fields, "resourcekey")
-			title := mapToString(record.Fields, "title")
-			author := mapToString(record.Fields, "author")
-			keywords := aws.StringValueSlice(record.Fields["keywords"])
-			response.Refs = append(response.Refs, searchRef{Author: author, GistID: gistID, HRef: href, Owner: owner, Title: title, Keywords: keywords})
-		}
-		json.NewEncoder(w).Encode(&response)
-	}
-}
-
-/**
- * Handle POST "/submissions" with body {author, credentials, gistId, keywords, owner, title}
- */
-func makeSubmit(sess *session.Session) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var payload submissionPayload
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&payload)
-		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
-
-		db := dynamodb.New(sess)
-		params := &dynamodb.PutItemInput{TableName: aws.String("DoodleRef"), Item: map[string]*dynamodb.AttributeValue{
-			"OwnerKey": {
-				S: aws.String(payload.Owner),
-			},
-			"ResourceKey": {
-				S: aws.String(payload.GistID),
-			},
-			"Type": {
-				S: aws.String("Gist"),
-			},
-			"Title": {
-				S: aws.String(payload.Title),
-			},
-			"Author": {
-				S: aws.String(payload.Author),
-			},
-			"Keywords": {
-				SS: aws.StringSlice(payload.Keywords),
-			},
-		}}
-		_, err = db.PutItem(params)
-		if err != nil {
-			fmt.Println("err  : ", err)
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
-		http.Error(w, "OK", http.StatusOK)
-	}
-}
-
 func main() {
 	flag.Parse()
 
@@ -211,21 +89,24 @@ func main() {
 	fmt.Printf("GITHUB_APPLICATION_CLIENT_ID => %s\n", githubAccessKey)
 	fmt.Printf("len(GITHUB_APPLICATION_CLIENT_SECRET) => %d\n", len(githubSecretKey))
 
-	awsAccessKey := os.Getenv("AWS_ACCESS_KEY_ID")
-	awsSecretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
-	fmt.Printf("AWS_ACCESS_KEY_ID => %s\n", awsAccessKey)
-	fmt.Printf("len(AWS_SECRET_ACCESS_KEY) => %d\n", len(awsSecretKey))
+	// The following lines
+	fmt.Printf("AWS_ACCESS_KEY_ID => %s\n", os.Getenv("AWS_ACCESS_KEY_ID"))
+	fmt.Printf("len(AWS_SECRET_ACCESS_KEY) => %d\n", len(os.Getenv("AWS_SECRET_ACCESS_KEY")))
 
-	// AWS configuration
-	sess, _ := session.NewSession(&aws.Config{Region: aws.String("us-east-1")})
+	searchService := arXiv.NewClient(nil)
+	u, err := url.Parse("http://localhost:8081")
+	if err != nil {
+		log.Fatalf("JSON marshalling failed: %s", err)
+	}
+	searchService.BaseURL = u
 
 	router.HandleFunc("/github_callback", githubCallback)
 
 	// We want to handle /authenticate/code
 	router.HandleFunc("/authenticate/{code}", makeExchange(githubAccessKey, githubSecretKey))
 
-	router.HandleFunc("/search", makeSearch(sess))
-	router.HandleFunc("/submissions", makeSubmit(sess))
+	router.HandleFunc("/search", makeSearchHandlerFunc(searchService))
+	router.HandleFunc("/submissions", makeSubmitHandlerFunc(searchService))
 
 	router.PathPrefix("/").Handler(withCookies(http.FileServer(http.Dir("./generated")), githubAccessKey))
 
