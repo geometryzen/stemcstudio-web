@@ -90,11 +90,11 @@ func main() {
 	fmt.Printf("len(GITHUB_APPLICATION_CLIENT_SECRET) => %d\n", len(githubSecretKey))
 
 	searchService := arXiv.NewClient(nil)
-	u, err := url.Parse("http://localhost:8081")
+	baseURL, err := url.Parse("http://localhost:8081")
 	if err != nil {
 		log.Fatalf("JSON marshalling failed: %s", err)
 	}
-	searchService.BaseURL = u
+	searchService.BaseURL = baseURL
 
 	router.HandleFunc("/github_callback", githubCallback)
 
