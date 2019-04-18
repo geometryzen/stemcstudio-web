@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/geometryzen/stemcstudio-arXiv-sdk-go"
+	arXiv "github.com/geometryzen/stemcstudio-arXiv-sdk-go"
 
 	"github.com/gorilla/mux"
 )

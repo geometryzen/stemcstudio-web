@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/geometryzen/stemcstudio-arXiv-sdk-go"
+	arXiv "github.com/geometryzen/stemcstudio-arXiv-sdk-go"
 )
 
 func makeSearchHandlerFunc(service arXiv.Service) http.HandlerFunc {
