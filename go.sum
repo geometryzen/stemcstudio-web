@@ -1,0 +1,4 @@
+github.com/geometryzen/stemcstudio-arXiv-sdk-go v0.0.0-20180127023537-580f5a957648 h1:+CEttn/bhPXDbv1VuagEpWOZeA0Su+IGMmeZsQ/Ihk8=
+github.com/geometryzen/stemcstudio-arXiv-sdk-go v0.0.0-20180127023537-580f5a957648/go.mod h1:rHML+528sLs5u8xynDivPDNMA+vWbKzqm9oJgrdKQb8=
+github.com/gorilla/mux v1.7.1 h1:Dw4jY2nghMMRsh1ol8dv1axHkDwMQK2DHerMNJsIpJU=
+github.com/gorilla/mux v1.7.1/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
